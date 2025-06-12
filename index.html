@@ -4,20 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Folgas por Turma - Junho 2025</title>
-    <meta name="theme-color" content="#4CAF50">
-    <link rel="manifest" href="manifest.json">
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
         }
         .notification {
-            padding: 15px;
-            margin: 20px 0;
+            padding: 12px;
+            margin: 15px 0;
             border-radius: 5px;
             display: none;
+            font-size: 14px;
         }
         .folga {
             background-color: #d4edda;
@@ -30,18 +29,21 @@
         .calendar {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
+            font-size: 14px;
         }
         .calendar th {
             background-color: #f2f2f2;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
+            font-size: 12px;
         }
         .calendar td {
             border: 1px solid #ddd;
-            padding: 10px;
-            height: 80px;
+            padding: 5px;
+            height: 60px;
             vertical-align: top;
+            font-size: 12px;
         }
         .today {
             background-color: #e6f7ff;
@@ -61,66 +63,83 @@
         }
         .day-number {
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
+            font-size: 14px;
         }
         .legend {
             display: flex;
-            gap: 15px;
-            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
         }
         .legend-item {
             display: flex;
             align-items: center;
             gap: 5px;
+            font-size: 12px;
         }
         .legend-color {
-            width: 20px;
-            height: 20px;
+            width: 15px;
+            height: 15px;
             border: 1px solid #ddd;
-        }
-        .turma-info {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
         }
         #turma {
             padding: 8px;
             font-size: 16px;
             margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        #installButton {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 1000;
+        h1 {
+            font-size: 22px;
+            margin-bottom: 15px;
         }
+        h2 {
+            font-size: 18px;
+        }
+
+        /* Melhorias específicas para mobile */
         @media (max-width: 600px) {
-            #installButton {
+            body {
+                padding: 10px;
+            }
+            .calendar td {
+                height: 50px;
+                padding: 3px;
+            }
+            .day-number {
+                font-size: 12px;
+            }
+            .calendar td span {
+                font-size: 10px;
                 display: block;
+                margin-top: 2px;
+            }
+            .notification {
+                padding: 10px;
+                font-size: 13px;
+            }
+        }
+
+        /* Ajustes para telas muito pequenas */
+        @media (max-width: 400px) {
+            .calendar td {
+                height: 45px;
+            }
+            .day-number {
+                font-size: 11px;
+            }
+            .calendar td span {
+                font-size: 9px;
+            }
+            h1 {
+                font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
     <h1>Folgas por Turma - Junho 2025</h1>
-    <div class="turma-info">
-        <p><strong>Folgas fixas para cada turma em junho de 2025:</strong></p>
-        <ul>
-            <li>Turma A: dias 17, 18, 25, 26</li>
-            <li>Turma B: dias 15, 19, 20, 27, 28</li>
-            <li>Turma C: dias 21, 22, 29, 30</li>
-            <li>Turma D: dias 12, 16, 23, 24</li>
-        </ul>
-    </div>
     
     <div>
         <label for="turma">Selecione sua turma:</label>
@@ -169,8 +188,6 @@
         <tbody id="calendarBody"></tbody>
     </table>
     
-    <button id="installButton" style="display: none;">Instalar App</button>
-    
     <script>
         // Folgas fixas para cada turma em junho de 2025
         const folgasPorTurma = {
@@ -186,7 +203,6 @@
         
         // Variável para armazenar a turma selecionada
         let turmaSelecionada = '';
-        let deferredPrompt;
         
         // Carrega dados salvos ao iniciar e renderiza o calendário
         document.addEventListener('DOMContentLoaded', function() {
@@ -200,46 +216,7 @@
                 verificarFolgas();
                 renderCalendar();
             });
-            
-            // Configuração do PWA
-            setupPWA();
         });
-        
-        // Configura o PWA e o botão de instalação
-        function setupPWA() {
-            const installButton = document.getElementById('installButton');
-            
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Previne o prompt automático
-                e.preventDefault();
-                // Guarda o evento para poder acioná-lo depois
-                deferredPrompt = e;
-                // Mostra o botão de instalação
-                installButton.style.display = 'block';
-                
-                installButton.addEventListener('click', () => {
-                    // Esconde o botão
-                    installButton.style.display = 'none';
-                    // Mostra o prompt de instalação
-                    deferredPrompt.prompt();
-                    // Espera pelo resultado
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('Usuário aceitou a instalação');
-                        } else {
-                            console.log('Usuário recusou a instalação');
-                        }
-                        deferredPrompt = null;
-                    });
-                });
-            });
-            
-            window.addEventListener('appinstalled', () => {
-                console.log('App instalado com sucesso');
-                installButton.style.display = 'none';
-                deferredPrompt = null;
-            });
-        }
         
         // Armazenamento local
         function saveData() {
@@ -383,18 +360,6 @@
                     notification.innerHTML += '<br>Este mês não há mais folgas para sua turma.';
                 }
             }
-        }
-    </script>
-    <script>
-        // Verifica se o service worker é suportado
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(registration => {
-                    console.log('ServiceWorker registrado com sucesso: ', registration.scope);
-                }).catch(err => {
-                    console.log('Falha ao registrar ServiceWorker: ', err);
-                });
-            });
         }
     </script>
 </body>
