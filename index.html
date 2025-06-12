@@ -97,6 +97,26 @@
         h2 {
             font-size: 18px;
         }
+        .notification-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .notification-btn:hover {
+            background-color: #45a049;
+        }
+        .notification-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
 
         /* Melhorias específicas para mobile */
         @media (max-width: 600px) {
@@ -117,6 +137,10 @@
             }
             .notification {
                 padding: 10px;
+                font-size: 13px;
+            }
+            .notification-btn {
+                padding: 8px 12px;
                 font-size: 13px;
             }
         }
@@ -153,6 +177,9 @@
     </div>
     
     <div id="notification" class="notification"></div>
+    
+    <button id="enableNotifications" class="notification-btn">Ativar Notificações</button>
+    <div id="notificationStatus" style="font-size: 14px; margin-bottom: 15px;"></div>
     
     <div class="legend">
         <div class="legend-item">
@@ -208,6 +235,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedData();
             renderCalendar();
+            checkNotificationPermission();
             
             // Event listener para o menu suspenso (atualiza automaticamente)
             document.getElementById('turma').addEventListener('change', function() {
@@ -216,7 +244,98 @@
                 verificarFolgas();
                 renderCalendar();
             });
+            
+            // Event listener para o botão de notificações
+            document.getElementById('enableNotifications').addEventListener('click', requestNotificationPermission);
         });
+        
+        // Verifica a permissão de notificação
+        function checkNotificationPermission() {
+            if (!('Notification' in window)) {
+                document.getElementById('notificationStatus').textContent = 
+                    'Seu navegador não suporta notificações push.';
+                document.getElementById('enableNotifications').disabled = true;
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                document.getElementById('notificationStatus').textContent = 
+                    'Notificações estão ativadas para este site.';
+                document.getElementById('enableNotifications').disabled = true;
+            } else if (Notification.permission === 'denied') {
+                document.getElementById('notificationStatus').textContent = 
+                    'Notificações foram bloqueadas. Você pode alterar isso nas configurações do seu navegador.';
+                document.getElementById('enableNotifications').disabled = true;
+            } else {
+                document.getElementById('notificationStatus').textContent = 
+                    'Clique no botão para ativar notificações.';
+            }
+        }
+        
+        // Solicita permissão para notificações
+        function requestNotificationPermission() {
+            Notification.requestPermission().then(function(permission) {
+                if (permission === 'granted') {
+                    document.getElementById('notificationStatus').textContent = 
+                        'Notificações ativadas com sucesso! Você receberá avisos sobre suas folgas.';
+                    document.getElementById('enableNotifications').disabled = true;
+                    
+                    // Mostra uma notificação de teste
+                    showNotification('Notificações ativadas', 'Você receberá avisos sobre suas folgas.');
+                    
+                    // Agenda notificações para dias de folga
+                    scheduleFolgaNotifications();
+                } else {
+                    document.getElementById('notificationStatus').textContent = 
+                        'Permissão para notificações não foi concedida.';
+                }
+            });
+        }
+        
+        // Mostra uma notificação push
+        function showNotification(title, body) {
+            if (Notification.permission === 'granted') {
+                const options = {
+                    body: body,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png' // Ícone opcional
+                };
+                
+                new Notification(title, options);
+            }
+        }
+        
+        // Agenda notificações para os dias de folga
+        function scheduleFolgaNotifications() {
+            if (!turmaSelecionada || Notification.permission !== 'granted') return;
+            
+            const folgas = folgasPorTurma[turmaSelecionada] || [];
+            const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+            
+            // Só agenda se estivermos em junho de 2025
+            if (mesAtual !== mesJunho2025 || anoAtual !== ano2025) return;
+            
+            const diaAtual = hoje.getDate();
+            
+            // Verifica se hoje é folga
+            if (folgas.includes(diaAtual)) {
+                showNotification('Lembrete de Folga', `Hoje (${diaAtual}/06/2025) é seu dia de folga! Aproveite para descansar.`);
+            }
+            
+            // Agenda notificação para o próximo dia de folga
+            const proximasFolgas = folgas.filter(dia => dia > diaAtual).sort((a, b) => a - b);
+            if (proximasFolgas.length > 0) {
+                const proximaFolga = proximasFolgas[0];
+                const diasRestantes = proximaFolga - diaAtual;
+                
+                if (diasRestantes === 1) {
+                    showNotification('Folga Amanhã', 'Amanhã é seu dia de folga! Prepare-se para descansar.');
+                } else if (diasRestantes <= 3) {
+                    showNotification('Folga Próxima', `Faltam apenas ${diasRestantes} dias para sua próxima folga (dia ${proximaFolga}/06).`);
+                }
+            }
+        }
         
         // Armazenamento local
         function saveData() {
