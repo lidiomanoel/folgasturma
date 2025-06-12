@@ -216,6 +216,60 @@
     </table>
     
     <script>
+
+        // Verifica se o navegador suporta notificações
+if ('Notification' in window) {
+  // Função para solicitar permissão e configurar notificações
+  function requestNotificationPermission() {
+    // Verifica se já temos permissão
+    if (Notification.permission === 'granted') {
+      // Se já tiver permissão, pode enviar notificação imediatamente
+      showSampleNotification();
+    } else if (Notification.permission !== 'denied') {
+      // Solicita permissão ao usuário
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          showSampleNotification();
+        }
+      });
+    }
+  }
+
+  // Função para mostrar uma notificação de exemplo
+  function showSampleNotification() {
+    // Verifica se é um dispositivo móvel
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      new Notification('Notificações Ativadas', {
+        body: 'Você agora receberá notificações do nosso site!',
+        icon: '/icon.png' // Substitua pelo caminho do seu ícone
+      });
+    }
+  }
+
+  // Verifica se é um dispositivo móvel antes de solicitar permissão
+  if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    // Espera o usuário interagir com a página antes de solicitar permissão
+    document.addEventListener('DOMContentLoaded', () => {
+      // Pode adicionar um botão ou solicitar após algum evento do usuário
+      setTimeout(requestNotificationPermission, 3000); // Solicita após 3 segundos
+    });
+  }
+
+  // Função para enviar notificações posteriormente
+  window.sendPushNotification = function(title, options) {
+    if (Notification.permission === 'granted') {
+      new Notification(title, options);
+    } else {
+      console.warn('Permissão para notificações não concedida.');
+    }
+  };
+} else {
+  console.warn('Este navegador não suporta notificações push.');
+}
+
+        sendPushNotification('Título da Notificação', {
+  body: 'Corpo da mensagem',
+  });
         // Folgas fixas para cada turma em junho de 2025
         const folgasPorTurma = {
             'A': [17, 18, 25, 26],
