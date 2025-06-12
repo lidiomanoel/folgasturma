@@ -117,22 +117,6 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        .test-notification-btn {
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-            margin: 10px 0;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .test-notification-btn:hover {
-            background-color: #0b7dda;
-        }
 
         /* Melhorias específicas para mobile */
         @media (max-width: 600px) {
@@ -155,7 +139,7 @@
                 padding: 10px;
                 font-size: 13px;
             }
-            .notification-btn, .test-notification-btn {
+            .notification-btn {
                 padding: 8px 12px;
                 font-size: 13px;
             }
@@ -195,7 +179,6 @@
     <div id="notification" class="notification"></div>
     
     <button id="enableNotifications" class="notification-btn">Ativar Notificações</button>
-    <button id="testNotification" class="test-notification-btn">Testar Notificação</button>
     <div id="notificationStatus" style="font-size: 14px; margin-bottom: 15px;"></div>
     
     <div class="legend">
@@ -264,15 +247,6 @@
             
             // Event listener para o botão de notificações
             document.getElementById('enableNotifications').addEventListener('click', requestNotificationPermission);
-            
-            // Event listener para o botão de teste de notificação
-            document.getElementById('testNotification').addEventListener('click', function() {
-                if (Notification.permission === 'granted') {
-                    showNotification('Notificação de Teste', 'Esta é uma notificação de teste para verificar o funcionamento!');
-                } else {
-                    alert('Por favor, ative as notificações primeiro usando o botão "Ativar Notificações".');
-                }
-            });
         });
         
         // Verifica a permissão de notificação
@@ -281,7 +255,6 @@
                 document.getElementById('notificationStatus').textContent = 
                     'Seu navegador não suporta notificações push.';
                 document.getElementById('enableNotifications').disabled = true;
-                document.getElementById('testNotification').disabled = true;
                 return;
             }
             
@@ -293,11 +266,9 @@
                 document.getElementById('notificationStatus').textContent = 
                     'Notificações foram bloqueadas. Você pode alterar isso nas configurações do seu navegador.';
                 document.getElementById('enableNotifications').disabled = true;
-                document.getElementById('testNotification').disabled = true;
             } else {
                 document.getElementById('notificationStatus').textContent = 
                     'Clique no botão para ativar notificações.';
-                document.getElementById('testNotification').disabled = true;
             }
         }
         
@@ -308,7 +279,6 @@
                     document.getElementById('notificationStatus').textContent = 
                         'Notificações ativadas com sucesso! Você receberá avisos sobre suas folgas.';
                     document.getElementById('enableNotifications').disabled = true;
-                    document.getElementById('testNotification').disabled = false;
                     
                     // Mostra uma notificação de teste
                     showNotification('Notificações ativadas', 'Você receberá avisos sobre suas folgas.');
@@ -318,7 +288,6 @@
                 } else {
                     document.getElementById('notificationStatus').textContent = 
                         'Permissão para notificações não foi concedida.';
-                    document.getElementById('testNotification').disabled = true;
                 }
             });
         }
