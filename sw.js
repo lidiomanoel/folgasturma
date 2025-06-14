@@ -1,4 +1,4 @@
-const CACHE_NAME = 'folgas-turma-v1';
+const CACHE_NAME = 'folgas-turma-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -14,17 +14,14 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-512x512.png'
 ];
 
-// Instala o Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
+      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Ativa o Service Worker e limpa caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -35,16 +32,13 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// Estratégia: Cache with Network Fallback
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
-      .then((response) => {
-        return response || fetch(event.request);
-      })
+      .then((response) => response || fetch(event.request))
   );
 });
