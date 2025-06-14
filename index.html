@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <!-- Adicione isso no <head> do seu HTML -->
-    <link rel="manifest" href="/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
     <title>Folgas por Turma</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -119,6 +120,13 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        #installBtn {
+            background-color: #2196F3;
+            margin-left: 10px;
+        }
+        #installBtn:hover {
+            background-color: #0b7dda;
+        }
 
         /* Melhorias específicas para mobile */
         @media (max-width: 600px) {
@@ -180,7 +188,10 @@
     
     <div id="notification" class="notification"></div>
     
-    <button id="enableNotifications" class="notification-btn">Ativar Notificações</button>
+    <div>
+        <button id="enableNotifications" class="notification-btn">Ativar Notificações</button>
+        <button id="installBtn" class="notification-btn" style="display: none;">Instalar App</button>
+    </div>
     <div id="notificationStatus" style="font-size: 14px; margin-bottom: 15px;"></div>
     
     <div class="legend">
@@ -218,65 +229,11 @@
     </table>
     
     <script>
-
-        // Verifica se o navegador suporta notificações
-if ('Notification' in window) {
-  // Função para solicitar permissão e configurar notificações
-  function requestNotificationPermission() {
-    // Verifica se já temos permissão
-    if (Notification.permission === 'granted') {
-      // Se já tiver permissão, pode enviar notificação imediatamente
-      showSampleNotification();
-    } else if (Notification.permission !== 'denied') {
-      // Solicita permissão ao usuário
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          showSampleNotification();
-        }
-      });
-    }
-  }
-
-  // Função para mostrar uma notificação de exemplo
-  function showSampleNotification() {
-    // Verifica se é um dispositivo móvel
-    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      new Notification('Notificações Ativadas', {
-        body: 'Você agora receberá notificações do nosso site!',
-        icon: '/icon.png' // Substitua pelo caminho do seu ícone
-      });
-    }
-  }
-
-  // Verifica se é um dispositivo móvel antes de solicitar permissão
-  if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    // Espera o usuário interagir com a página antes de solicitar permissão
-    document.addEventListener('DOMContentLoaded', () => {
-      // Pode adicionar um botão ou solicitar após algum evento do usuário
-      setTimeout(requestNotificationPermission, 3000); // Solicita após 3 segundos
-    });
-  }
-
-  // Função para enviar notificações posteriormente
-  window.sendPushNotification = function(title, options) {
-    if (Notification.permission === 'granted') {
-      new Notification(title, options);
-    } else {
-      console.warn('Permissão para notificações não concedida.');
-    }
-  };
-} else {
-  console.warn('Este navegador não suporta notificações push.');
-}
-
-        sendPushNotification('Título da Notificação', {
-  body: 'Corpo da mensagem',
-  });
         // Folgas fixas para cada turma em junho de 2025
         const folgasPorTurma = {
             'A': [17, 18, 25, 26],
             'B': [15, 19, 20, 27, 28],
-            'C': [13, 14, 21, 22, 29, 30], // Adicionados dias 13 e 14 de junho
+            'C': [13, 14, 21, 22, 29, 30],
             'D': [12, 16, 23, 24]
         };
         
@@ -286,12 +243,15 @@ if ('Notification' in window) {
         
         // Variável para armazenar a turma selecionada
         let turmaSelecionada = '';
+        let deferredPrompt;
         
         // Carrega dados salvos ao iniciar e renderiza o calendário
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedData();
             renderCalendar();
             checkNotificationPermission();
+            registerServiceWorker();
+            setupInstallPrompt();
             
             // Event listener para o menu suspenso (atualiza automaticamente)
             document.getElementById('turma').addEventListener('change', function() {
@@ -299,11 +259,65 @@ if ('Notification' in window) {
                 saveData();
                 verificarFolgas();
                 renderCalendar();
+                
+                // Agenda notificações se já tiver permissão
+                if (Notification.permission === 'granted') {
+                    scheduleFolgaNotifications();
+                }
             });
             
             // Event listener para o botão de notificações
             document.getElementById('enableNotifications').addEventListener('click', requestNotificationPermission);
         });
+        
+        // Registra o Service Worker
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registrado com sucesso:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Falha ao registrar ServiceWorker:', error);
+                    });
+            }
+        }
+        
+        // Configura o prompt de instalação
+        function setupInstallPrompt() {
+            const installBtn = document.getElementById('installBtn');
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Previne o prompt automático
+                e.preventDefault();
+                // Guarda o evento para ser disparado depois
+                deferredPrompt = e;
+                // Mostra o botão de instalação
+                installBtn.style.display = 'inline-block';
+                
+                installBtn.addEventListener('click', () => {
+                    // Mostra o prompt de instalação
+                    deferredPrompt.prompt();
+                    // Espera pelo resultado
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('Usuário aceitou a instalação');
+                        } else {
+                            console.log('Usuário recusou a instalação');
+                        }
+                        deferredPrompt = null;
+                        installBtn.style.display = 'none';
+                    });
+                });
+            });
+            
+            // Esconde o botão se o app já estiver instalado
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA foi instalado');
+                installBtn.style.display = 'none';
+                deferredPrompt = null;
+            });
+        }
         
         // Verifica a permissão de notificação
         function checkNotificationPermission() {
@@ -318,6 +332,7 @@ if ('Notification' in window) {
                 document.getElementById('notificationStatus').textContent = 
                     'Notificações estão ativadas para este site.';
                 document.getElementById('enableNotifications').disabled = true;
+                scheduleFolgaNotifications();
             } else if (Notification.permission === 'denied') {
                 document.getElementById('notificationStatus').textContent = 
                     'Notificações foram bloqueadas. Você pode alterar isso nas configurações do seu navegador.';
@@ -353,10 +368,17 @@ if ('Notification' in window) {
             if (Notification.permission === 'granted') {
                 const options = {
                     body: body,
-                    icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png' // Ícone opcional
+                    icon: '/icons/icon-192x192.png',
+                    badge: '/icons/icon-96x96.png'
                 };
                 
-                new Notification(title, options);
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(title, options);
+                    });
+                } else {
+                    new Notification(title, options);
+                }
             }
         }
         
@@ -532,10 +554,4 @@ if ('Notification' in window) {
                 if (proximasFolgas.length > 0) {
                     notification.innerHTML += `<br>Sua próxima folga será dia ${proximasFolgas[0]}/06/2025.`;
                 } else {
-                    notification.innerHTML += '<br>Este mês não há mais folgas para sua turma.';
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+                    notification.innerHTML += '<br>Este m
