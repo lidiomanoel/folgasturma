@@ -115,6 +115,10 @@
         .month-selector button:hover {
             background-color: #e6e6e6;
         }
+        .month-selector button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         footer {
             margin-top: auto;
             padding: 15px 0;
@@ -225,7 +229,7 @@
     </footer>
     
     <script>
-        // Folgas fixas para cada turma (até dezembro de 2025)
+        // Folgas fixas para cada turma (junho a dezembro de 2025)
         const folgasPorTurmaEMes = {
             '2025-6': { // Junho 2025
                 'A': [1, 2, 9, 10, 17, 18, 25, 26],
@@ -271,7 +275,7 @@
             }
         };
         
-        // Mês e ano atualmente exibidos
+        // Mês e ano atualmente exibidos (começa em junho)
         let mesAtual = 5; // 5 = junho (0-11)
         let anoAtual = 2025;
         
@@ -282,6 +286,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadSavedData();
             renderCalendar();
+            updateNavigationButtons();
             
             // Event listener para o menu suspenso (atualiza automaticamente)
             document.getElementById('turma').addEventListener('change', function() {
@@ -293,6 +298,11 @@
             
             // Event listeners para navegação entre meses
             document.getElementById('prevMonth').addEventListener('click', function() {
+                if (mesAtual === 5 && anoAtual === 2025) {
+                    // Não permite voltar antes de junho de 2025
+                    return;
+                }
+                
                 if (mesAtual === 0) {
                     mesAtual = 11;
                     anoAtual--;
@@ -301,10 +311,11 @@
                 }
                 updateMonthYearDisplay();
                 renderCalendar();
+                updateNavigationButtons();
             });
             
             document.getElementById('nextMonth').addEventListener('click', function() {
-                if (mesAtual === 11 && anoAtual >= 2025) {
+                if (mesAtual === 11 && anoAtual === 2025) {
                     // Não permite avançar além de dezembro de 2025
                     return;
                 }
@@ -317,8 +328,15 @@
                 }
                 updateMonthYearDisplay();
                 renderCalendar();
+                updateNavigationButtons();
             });
         });
+        
+        // Atualiza os botões de navegação (desabilita quando necessário)
+        function updateNavigationButtons() {
+            document.getElementById('prevMonth').disabled = (mesAtual === 5 && anoAtual === 2025);
+            document.getElementById('nextMonth').disabled = (mesAtual === 11 && anoAtual === 2025);
+        }
         
         // Atualiza o display do mês/ano
         function updateMonthYearDisplay() {
