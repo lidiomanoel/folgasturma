@@ -10,6 +10,9 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .notification {
             padding: 12px;
@@ -112,6 +115,14 @@
         .month-selector button:hover {
             background-color: #e6e6e6;
         }
+        footer {
+            margin-top: auto;
+            padding: 15px 0;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
 
         /* Melhorias específicas para mobile */
         @media (max-width: 600px) {
@@ -133,6 +144,10 @@
             .notification {
                 padding: 10px;
                 font-size: 13px;
+            }
+            footer {
+                font-size: 11px;
+                padding: 10px 0;
             }
         }
 
@@ -204,6 +219,10 @@
         </thead>
         <tbody id="calendarBody"></tbody>
     </table>
+    
+    <footer>
+        Lídio Manoel - 2025 Todos os direitos reservados
+    </footer>
     
     <script>
         // Folgas fixas para cada turma
